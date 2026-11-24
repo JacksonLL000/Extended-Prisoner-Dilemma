@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Price of Trust | Group 13b</title>
+<style>
+  :root{color-scheme:light;--ink:#202c28;--muted:#485d54;--rule:#cdd9d3;--paper:#f7faf8;--green:#116347;--light:#e0f0e6;--rust:#963c28;--warm:#fae7dd}
+  *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.45 Inter,"Helvetica Neue",Arial,sans-serif}
+  main,header,footer{max-width:1220px;margin:auto;padding-inline:clamp(18px,4vw,52px)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:27px 18px}
+  h1,h2,h3,p{margin:0}h1{font-size:36px;line-height:1.1}h2{font-size:27px;line-height:1.16}h3{font-size:19px}
+  .course,.muted,.hint{color:var(--muted)} .course{font-size:15px;margin-bottom:4px}
+  button,select{font:inherit;color:inherit;border:1px solid #a0b1a9;border-radius:6px;background:white;min-height:44px;padding:8px 13px}
+  button,select,input{cursor:pointer}button:hover:not(:disabled){background:var(--light)}button:disabled{opacity:.46;cursor:default}
+  :focus-visible{outline:3px solid #246eb2;outline-offset:3px}.primary{background:var(--green);color:#fff;border-color:var(--green)}.primary:hover:not(:disabled){background:#0a5039}
+  nav{display:flex;gap:7px;border-bottom:1px solid var(--rule);margin-bottom:21px}
+  nav button{background:transparent;border:0;border-radius:0;border-bottom:3px solid transparent;padding-inline:15px}
+  nav button[aria-current=true]{border-color:var(--green);color:var(--green);font-weight:750}
+  .panelhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+  .hint{font-size:15px;line-height:1.4}.preset,.transport{display:flex;gap:8px;flex-wrap:wrap}
+  .preset button{font-size:15px;min-height:39px}.preset button[aria-pressed=true]{background:var(--light);color:var(--green);border-color:var(--green);font-weight:700}
+  .setup{display:grid;grid-template-columns:1fr 1fr 150px;gap:12px;margin-block:15px}
+  label{font-size:15px;font-weight:700;display:block}select{display:block;width:100%;margin-top:4px;font-size:17px}
+  .stage{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding-block:14px;margin-block:15px}
+  .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:12px}.player{min-width:0}
+  .player + .player{border-left:1px solid var(--rule);padding-left:16px}
+  .player strong{font-size:24px;font-variant-numeric:tabular-nums}.player p{font-size:15px;min-height:42px;color:var(--muted)}
+  .strip{overflow-x:auto}.strip table{width:100%;table-layout:fixed;min-width:330px}.strip th:first-child{width:66px}
+  table{border-collapse:collapse;font-variant-numeric:tabular-nums}td,th{padding:7px 9px;text-align:left}thead th{font-size:15px;color:var(--muted);font-weight:650}
+  .strip td,.strip th:not(:first-child){text-align:center}.strip td{height:47px;border:3px solid var(--paper);background:#edf1ee}
+  .strip .C{background:var(--light);color:var(--green)}.strip .D{background:var(--warm);color:var(--rust)}
+  .strip strong{font-size:21px}.strip small{display:block;font-size:12px}.strip .current{box-shadow:inset 0 0 0 2px currentColor}
+  .stagefoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:9px}#roundStatus{font-weight:700}
+  .transport{align-items:center}.transport .hint{margin-left:4px}
+  .tourney{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:28px;margin-top:18px}
+  .controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap}.controls select{min-width:150px}
+  figure{margin:0;min-width:0}canvas{display:block;width:100%;height:auto;aspect-ratio:620/335}figcaption{margin:2px 0 4px}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-block:1px solid var(--rule);padding-block:9px;margin-bottom:5px}
+  .metrics span{display:block}.metrics strong{font-size:24px}.numeric{text-align:right}
+  .ranking{width:100%}.ranking th,.ranking td{border-bottom:1px solid var(--rule);padding-inline:4px}
+  #runInfo{min-height:42px;margin-block:5px}.compact{font-size:15px}
+  details{margin:14px 0 0;border-bottom:1px solid var(--rule);padding-bottom:10px}summary{cursor:pointer;font-weight:650}
+  .payoffs th,.payoffs td{padding:5px 16px}.payoffs td{font-weight:700}
+  footer{font-size:14px;color:var(--muted);padding-block:20px 15px}a{color:var(--green)}
+  [hidden]{display:none!important}
+  @media(max-width:750px){body{font-size:16px}header{padding-top:18px}h1{font-size:28px}h2{font-size:23px}.tourney{grid-template-columns:1fr;gap:12px}.setup{grid-template-columns:1fr 1fr}.setup label:last-child{grid-column:1 / -1}.scoreboard h3{font-size:17px}.strip th,.strip td{padding-inline:2px}}
+  @media(max-width:420px){header{align-items:flex-start}header button{font-size:13px;padding-inline:8px}h1{font-size:25px}.setup{gap:8px}select{font-size:14px;padding-inline:6px}.player p{min-height:64px}}
+</style>
+</head>
+<body>
+<header><div><div class="course">CCST 9017 · Group 13b</div><h1>The Price of Trust</h1></div><button id="full" type="button" title="Toggle full screen">⛶ Full screen</button></header>
+<main>
+  <nav aria-label="Experiment views"><button id="matchTab" aria-current="true" aria-controls="match">Match replay</button><button id="tournamentTab" aria-current="false" aria-controls="tournament">Tournament</button></nav>
+  <section id="match" aria-labelledby="matchTitle">
+    <div class="panelhead"><h2 id="matchTitle">What happens after the first move?</h2><div class="preset" aria-label="Match presets"><button data-match="AllD,TFT">Defection</button><button data-match="FORG1,STFT">Forgiveness</button><button data-match="TFT,STFT">Retaliation</button></div></div>
+    <div class="setup">
+      <label>Player A<select id="a"></select></label>
+      <label>Player B<select id="b"></select></label>
+      <label>Continuation (w)<select id="matchW"><option value=".5">0.50</option><option value=".76">0.76</option><option value=".995" selected>0.995</option></select></label>
+    </div>
+    <div class="stage">
+      <div class="scoreboard">
+        <div class="player"><h3 id="aName"></h3><p id="aRule"></p><strong id="aScore">0</strong> <span class="hint">points</span></div>
+        <div class="player"><h3 id="bName"></h3><p id="bRule"></p><strong id="bScore">0</strong> <span class="hint">points</span></div>
+      </div>
+      <div class="strip"><table aria-label="Actions and payoffs by round"><thead id="roundHead"></thead><tbody id="roundRows"></tbody></table></div>
+      <div class="stagefoot"><p id="roundStatus" role="status"></p><p class="hint">C = Cooperate · D = Defect</p></div>
+    </div>
+    <div class="transport"><button class="primary" id="next">Next round</button><button id="play">▶ Play</button><button id="reset">↺ Reset</button><p class="hint">Seeded replay · up to 12 rounds shown</p></div>
+    <details><summary>Payoff matrix</summary><table class="payoffs"><thead><tr><th scope="col">A / B</th><th scope="col">Cooperate</th><th scope="col">Defect</th></tr></thead><tbody><tr><th scope="row">Cooperate</th><td>3, 3</td><td>0, 5</td></tr><tr><th scope="row">Defect</th><td>5, 0</td><td>1, 1</td></tr></tbody></table></details>
+  </section>
+  <section id="tournament" aria-labelledby="tourneyTitle" hidden>
+    <div class="panelhead"><h2 id="tourneyTitle">When does cooperation pay?</h2><div class="preset"><button data-w="0.5">Short relationship</button><button data-w="0.995">Long relationship</button></div></div>
+    <p class="hint">23 strategies · 253 distinct pairings · 10 runs per pair · no noise</p>
+    <div class="tourney">
+      <figure><figcaption><h3>Value of trust</h3><p class="hint">Mean score of the 13 strategies that never defect first minus the mean score of the other 10</p></figcaption><canvas id="curve" width="620" height="335" role="img" aria-label="Value of trust in points per round, increasing with the continuation probability. The saved curve crosses zero near 0.76."></canvas><p class="hint">Line: saved experiment results. Highlight: latest live run.</p></figure>
+      <div>
+        <div class="controls"><label>Continuation (w)<select id="tourW"></select></label><button id="run" class="primary">▶ Run tournament</button></div>
+        <p id="runInfo" class="hint" role="status"></p>
+        <div class="metrics"><div><span class="hint">Expected rounds</span><strong id="expected"></strong></div><div><span class="hint">Value of trust</span><strong id="gap"></strong></div></div>
+        <h3 id="winner"></h3>
+        <table class="ranking compact"><thead><tr><th scope="col">Strategy</th><th scope="col" class="numeric">Rank / 23</th><th scope="col" class="numeric">Pts / round</th></tr></thead><tbody id="ranks"></tbody></table>
+        <details><summary>All 23 rankings</summary><table class="ranking compact"><thead><tr><th scope="col">Strategy</th><th scope="col" class="numeric">Rank</th><th scope="col" class="numeric">Pts / round</th></tr></thead><tbody id="allRanks"></tbody></table></details>
+      </div>
+    </div>
+  </section>
+</main>
+<footer><a href="https://github.com/dannyjerrygit/CCST-9017/tree/7c638a0">Project source</a></footer>
+<script>
+const PAYOFF = { T: 5, R: 3, P: 1, S: 0 };
+const C = 'C', D = 'D';
+
+const flip = m => (m === 'C' ? 'D' : 'C');
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function payoff(a, b) {
+  if (a === C && b === C) return [PAYOFF.R, PAYOFF.R];
+  if (a === D && b === D) return [PAYOFF.P, PAYOFF.P];
+  if (a === D && b === C) return [PAYOFF.T, PAYOFF.S];
+  return [PAYOFF.S, PAYOFF.T];
+}
+
+function safeMove(strat, ctx) {
+  try {
+    const m = strat.move(ctx);
+    return (m === 'D') ? 'D' : 'C';
+  } catch (e) {
+    return 'C';
+  }
+}
+
+function playMatch(A, B, opt) {
+  const { w, epsA, epsO, seed, keepStrip } = opt;
+  const rng = mulberry32(seed);
+  const oppA = [], oppB = [], meA = [], meB = [], payA = [], payB = [];
+  const stripA = [], stripB = [];
+  let totalA = 0, totalB = 0, rounds = 0;
+  const HARD_CAP = 4000;
+
+  while (rounds < HARD_CAP) {
+    rounds++;
+
+    const iA = safeMove(A, { opp: oppA, me: meA, pay: payA, rng, round: rounds });
+    const iB = safeMove(B, { opp: oppB, me: meB, pay: payB, rng, round: rounds });
+
+    const mA = (epsA > 0 && rng() < epsA) ? flip(iA) : iA;
+    const mB = (epsA > 0 && rng() < epsA) ? flip(iB) : iB;
+
+    const [pA, pB] = payoff(mA, mB);
+    totalA += pA; totalB += pB;
+
+    meA.push(mA); meB.push(mB);
+    payA.push(pA); payB.push(pB);
+
+    const oA = (epsO > 0 && rng() < epsO) ? flip(mB) : mB;
+    const oB = (epsO > 0 && rng() < epsO) ? flip(mA) : mA;
+    oppA.push(oA); oppB.push(oB);
+
+    if (keepStrip && rounds <= 120) { stripA.push(mA); stripB.push(mB); }
+
+    if (rng() >= w) break;
+  }
+
+  return {
+    rounds, totalA, totalB,
+    avgA: totalA / rounds, avgB: totalB / rounds,
+    stripA, stripB
+  };
+}
+
+let strategies = [
+  {
+    short: 'AllC', name: 'Always Cooperate', color: '#2563eb',
+    desc: 'Plays C forever. Fully trusting, never retaliates.',
+    move: () => C
+  },
+  {
+    short: 'AllD', name: 'Always Defect', color: '#dc2626',
+    desc: 'Plays D forever. Exploits everyone it meets.',
+    move: () => D
+  },
+  {
+    short: 'TFT', name: 'Tit for Tat', color: '#059669',
+    desc: "Cooperates first, then copies the opponent's last move.",
+    move: ({ opp }) => opp.length ? opp[opp.length - 1] : C
+  },
+  {
+    short: 'GTFT', name: 'Generous Tit for Tat', color: '#0d9488',
+    desc: 'Tit for Tat, but forgives a defection with probability 1/3.',
+    move: ({ opp, rng }) => {
+      if (!opp.length) return C;
+      if (opp[opp.length - 1] === C) return C;
+      return rng() < 1 / 3 ? C : D;
+    }
+  },
+  {
+    short: 'STFT', name: 'Suspicious Tit for Tat', color: '#7c3aed',
+    desc: 'Defects on the first move, then behaves like Tit for Tat.',
+    move: ({ opp }) => opp.length ? opp[opp.length - 1] : D
+  },
+  {
+    short: 'TF2T', name: 'Tit for Two Tats', color: '#0891b2',
+    desc: 'Only retaliates after two consecutive defections. Very forgiving.',
+    move: ({ opp }) => {
+      if (opp.length < 2) return C;
+      return (opp[opp.length - 1] === D && opp[opp.length - 2] === D) ? D : C;
+    }
+  },
+  {
+    short: 'TTFT', name: 'Two Tits for Tat', color: '#be185d',
+    desc: 'Retaliates twice for every single defection. Holds a grudge.',
+    move: ({ opp }) => {
+      const n = opp.length;
+      if (n === 0) return C;
+      if (opp[n - 1] === D) return D;
+      if (n >= 2 && opp[n - 2] === D) return D;
+      return C;
+    }
+  },
+  {
+    short: 'PAV', name: 'Pavlov (Win-Stay, Lose-Shift)', color: '#ca8a04',
+    desc: 'If the last payoff was a win (3 or 5), repeat the move; if it was a loss (0 or 1), switch.',
+    move: ({ me, pay }) => {
+      if (!me.length) return C;
+      const last = me[me.length - 1];
+      return pay[pay.length - 1] >= PAYOFF.R ? last : flip(last);
+    }
+  },
+  {
+    short: 'GRIM', name: 'Grim Trigger', color: '#7f1d1d',
+    desc: 'Cooperates until the first defection, then defects forever.',
+    move: ({ opp }) => opp.includes(D) ? D : C
+  },
+  {
+    short: 'JOSS', name: 'Joss (Sneaky Tit for Tat)', color: '#c2410c',
+    desc: 'Tit for Tat, but takes a 10% chance to defect each round.',
+    move: ({ opp, rng }) => {
+      if (rng() < 0.1) return D;
+      return opp.length ? opp[opp.length - 1] : C;
+    }
+  },
+  {
+    short: 'SMAJ', name: 'Soft Majority', color: '#4d7c0f',
+    desc: 'Cooperates unless the opponent has defected more often than cooperated.',
+    move: ({ opp }) => {
+      let c = 0, d = 0;
+      for (const m of opp) { if (m === C) c++; else d++; }
+      return d > c ? D : C;
+    }
+  },
+  {
+    short: 'ALT', name: 'Alternator', color: '#a21caf',
+    desc: 'Alternates C, D, C, D, ... regardless of what the opponent does.',
+    move: ({ round }) => (round % 2 === 1 ? C : D)
+  },
+  {
+    short: 'PROBE', name: 'Probe', color: '#0f766e',
+    desc: 'Defects once, then cooperates twice, then plays Tit for Tat.',
+    move: ({ opp, round }) => {
+      if (round === 1) return D;
+      if (round <= 3) return C;
+      return opp.length ? opp[opp.length - 1] : C;
+    }
+  },
+  {
+    short: 'RAND', name: 'Random', color: '#64748b',
+    desc: 'Coins a fair coin every round. Pure noise.',
+    move: ({ rng }) => (rng() < 0.5 ? C : D)
+  },
+
+  {
+    short: 'FORG1', name: 'Forgive Once', color: '#4f46e5',
+    desc: "Tolerates the opponent's first defection and keeps cooperating; defects forever once two defections have piled up.",
+    move: ({ opp }) => {
+      let d = 0;
+      for (const m of opp) if (m === D) d++;
+      return d >= 2 ? D : C;
+    }
+  },
+  {
+    short: 'ESCAL', name: 'Escalating Punishment', color: '#b45309',
+    desc: 'Answers the k-th defection with k consecutive defections, then returns to C. The punishment is cumulative.',
+    move: ({ opp, me }) => {
+      let d = 0;
+      for (const m of opp) if (m === D) d++;
+      // owing d(d+1)/2 defections after d observed defections
+      const owed = d * (d + 1) / 2;
+      let paid = 0;
+      for (const m of me) if (m === D) paid++;
+      return (owed - paid) > 0 ? D : C;
+    }
+  },
+  {
+    short: 'MAJ2', name: 'First-Strike Majority', color: '#15803d',
+    desc: 'Opens with D; afterwards defects whenever the opponent has defected at least as often as it cooperated.',
+    move: ({ opp, round }) => {
+      if (round === 1) return D;
+      let c = 0, d = 0;
+      for (const m of opp) { if (m === D) d++; else c++; }
+      return d >= c ? D : C;
+    }
+  },
+
+  {
+    short: 'PRIME', name: 'Prime Rounds', color: '#6d28d9',
+    desc: 'Defects on prime-numbered rounds (2, 3, 5, 7, 11, ...) and cooperates otherwise. Ignores the opponent entirely.',
+    move: ({ round }) => isPrime(round) ? D : C
+  },
+  {
+    short: 'RND2', name: 'Random Start, Delayed Copy', color: '#475569',
+    desc: "Plays at random for two rounds, then copies the opponent's choice from two rounds earlier.",
+    move: ({ opp, rng, round }) => {
+      if (round <= 2) return rng() < 0.5 ? D : C;
+      return opp[opp.length - 2];
+    }
+  },
+  {
+    short: 'TRUST', name: 'Trust After Ten', color: '#0284c7',
+    desc: 'Once ten consecutive rounds of (C, C) have occurred it trusts forever; until then it plays Tit for Tat.',
+    move: ({ opp, me }) => {
+      const n = opp.length;
+      if (n >= 10) {
+        for (let i = 0; i + 10 <= n; i++) {
+          let ok = true;
+          for (let j = i; j < i + 10; j++) {
+            if (opp[j] !== C || me[j] !== C) { ok = false; break; }
+          }
+          if (ok) return C;
+        }
+      }
+      return n ? opp[n - 1] : C;
+    }
+  },
+
+  {
+    short: 'HSHK', name: 'C-D Handshake', color: '#db2777',
+    desc: 'Opens with C then D. If the opponent mirrors (C, D) as well, it cooperates forever; otherwise it falls back to Tit for Tat.',
+    move: ({ opp, round }) => {
+      if (round === 1) return C;
+      if (round === 2) return D;
+      if (opp.length >= 2 && opp[0] === C && opp[1] === D) return C;
+      return opp[opp.length - 1];
+    }
+  },
+  {
+    short: 'ONCE', name: 'Retaliate Once', color: '#65a30d',
+    desc: 'Defects only when the opponent defected last round while it cooperated itself. Every other round it plays C.',
+    move: ({ opp, me }) => {
+      if (!opp.length || !me.length) return C;
+      return (opp[opp.length - 1] === D && me[me.length - 1] === C) ? D : C;
+    }
+  },
+  {
+    short: 'LAG2', name: 'Delayed Copy', color: '#0e7490',
+    desc: "Cooperates for two rounds, then copies the opponent's choice from two rounds earlier.",
+    move: ({ opp, round }) => {
+      if (round <= 2) return C;
+      return opp[opp.length - 2];
+    }
+  }
+];
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n % 2 === 0) return n === 2;
+  for (let i = 3; i * i <= n; i += 2) if (n % i === 0) return false;
+  return true;
+}
+
+
+const state = {w: 0.5, epsA: 0, epsO: 0, seeds: 10, result: null};
+function runTournament() {
+  const n = strategies.length;
+  const { w, epsA, epsO, seeds } = state;
+
+  const matrix = Array.from({ length: n }, () => new Array(n).fill(null));
+  const details = {};
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      let totA = 0, totB = 0, rA = 0, rB = 0;
+
+      for (let s = 0; s < seeds; s++) {
+        const seed = (i + 1) * 99991 + (j + 1) * 65537 + s * 104729;
+        const keepStrip = (s === 0);
+        const r = playMatch(strategies[i], strategies[j],
+          { w, epsA, epsO, seed, keepStrip });
+        totA += r.totalA; totB += r.totalB;
+        rA += r.rounds; rB += r.rounds;
+
+        if (keepStrip) {
+          details[i + '-' + j] = {
+            stripA: r.stripA, stripB: r.stripB,
+            rounds: r.rounds, totalA: r.totalA, totalB: r.totalB
+          };
+        }
+      }
+
+      matrix[i][j] = totA / rA;
+      matrix[j][i] = totB / rB;
+    }
+  }
+
+  const scores = [];
+  for (let i = 0; i < n; i++) {
+    let sum = 0;
+    for (let j = 0; j < n; j++) {
+      if (i !== j) sum += matrix[i][j];
+    }
+    scores.push({ idx: i, mean: sum / (n - 1) });
+  }
+
+  scores.sort((a, b) => b.mean - a.mean);
+
+  state.result = { matrix, scores, details, n };
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+
+const saved = [{"w":0.5,"vot":-0.40023032922486346},{"w":0.55,"vot":-0.31444634372315683},{"w":0.6,"vot":-0.2519950645188236},{"w":0.65,"vot":-0.15861717679469622},{"w":0.7,"vot":-0.09573883495243507},{"w":0.72,"vot":-0.06602610330212233},{"w":0.74,"vot":-0.04155534445323017},{"w":0.76,"vot":-0.00381212854640145},{"w":0.78,"vot":0.026057579309503698},{"w":0.8,"vot":0.06026683739911931},{"w":0.85,"vot":0.15577607848496333},{"w":0.9,"vot":0.24862290848351076},{"w":0.95,"vot":0.3411080913700695},{"w":0.99,"vot":0.4455196168879376},{"w":0.995,"vot":0.4654370692918346}];
+const nice = new Set(["AllC","TFT","GTFT","TF2T","TTFT","PAV","GRIM","SMAJ","TRUST","FORG1","ESCAL","ONCE","LAG2"]);
+const byId = id => document.getElementById(id);
+const matchPresets = [...document.querySelectorAll('[data-match]')];
+const horizonPresets = [...document.querySelectorAll('[data-w]')];
+const byShort = new Map(strategies.map(strategy => [strategy.short, strategy]));
+const aSelect = byId('a');
+const bSelect = byId('b');
+const matchW = byId('matchW');
+const tourW = byId('tourW');
+const nextButton = byId('next');
+const playButton = byId('play');
+const runButton = byId('run');
+const exampleSeed = 12345;
+const roundsPerPage = 6;
+let replay;
+let shown = 0;
+let timer = null;
+let live = null;
+let running = false;
+
+function appendOption(select, value, label) {
+  select.add(new Option(label, value));
+}
+
+function formatW(w) {
+  return w === 0.995 ? '0.995' : w.toFixed(2);
+}
+
+function formatGap(gap) {
+  if (Math.abs(gap) < 0.0005) return '0.000';
+  return (gap < 0 ? '−' : '+') + Math.abs(gap).toFixed(3);
+}
+
+function cell(row, text, heading, scope) {
+  const element = document.createElement(heading ? 'th' : 'td');
+  element.textContent = text;
+  if (heading) element.scope = scope;
+  row.append(element);
+  return element;
+}
+
+function stopReplay() {
+  clearInterval(timer);
+  timer = null;
+  playButton.textContent = '▶ Play';
+}
+
+function renderReplay() {
+  const pageStart = Math.floor(Math.max(0, shown - 1) / roundsPerPage) * roundsPerPage;
+  const head = document.createElement('tr');
+  cell(head, 'Round', true, 'col');
+  const aRow = document.createElement('tr');
+  const bRow = document.createElement('tr');
+  cell(aRow, 'A', true, 'row');
+  cell(bRow, 'B', true, 'row');
+
+  for (let i = pageStart; i < pageStart + roundsPerPage; i++) {
+    cell(head, String(i + 1), true, 'col');
+    const aCell = cell(aRow, '·');
+    const bCell = cell(bRow, '·');
+    if (i >= shown) continue;
+    const turn = replay.turns[i];
+    for (const [box, move, points] of [[aCell, turn.a, turn.pointsA], [bCell, turn.b, turn.pointsB]]) {
+      box.className = move + (i === shown - 1 ? ' current' : '');
+      const action = document.createElement('strong');
+      action.textContent = move;
+      const payoffLabel = document.createElement('small');
+      payoffLabel.textContent = '+' + points + ' pts';
+      box.replaceChildren(action, payoffLabel);
+      box.setAttribute('aria-label', (move === C ? 'Cooperate' : 'Defect') + ', ' + points + ' points');
+    }
+  }
+
+  byId('roundHead').replaceChildren(head);
+  byId('roundRows').replaceChildren(aRow, bRow);
+  const lastTurn = replay.turns[shown - 1];
+  byId('aScore').textContent = lastTurn?.totalA ?? 0;
+  byId('bScore').textContent = lastTurn?.totalB ?? 0;
+
+  const finished = shown >= replay.turns.length;
+  nextButton.disabled = finished;
+  playButton.disabled = finished;
+  if (finished) stopReplay();
+  const status = byId('roundStatus');
+  if (shown === 0) {
+    status.textContent = 'Ready for round 1';
+  } else if (shown === replay.matchLength) {
+    status.textContent = 'Match ended after ' + shown + (shown === 1 ? ' round' : ' rounds');
+  } else if (finished) {
+    status.textContent = 'First ' + shown + ' rounds shown · ' + replay.matchLength + ' rounds in this match';
+  } else {
+    status.textContent = 'Round ' + shown + ' · Match continues';
+  }
+}
+
+function prepareReplay() {
+  stopReplay();
+  const a = byShort.get(aSelect.value);
+  const b = byShort.get(bSelect.value);
+  const match = playMatch(a, b, {
+    w: Number(matchW.value), epsA: 0, epsO: 0, seed: exampleSeed, keepStrip: true,
+  });
+  let totalA = 0;
+  let totalB = 0;
+  const turns = match.stripA.slice(0, 2 * roundsPerPage).map((a, i) => {
+    const b = match.stripB[i];
+    const [pointsA, pointsB] = payoff(a, b);
+    totalA += pointsA;
+    totalB += pointsB;
+    return {a, b, pointsA, pointsB, totalA, totalB};
+  });
+  replay = {turns, matchLength: match.rounds};
+  shown = 0;
+  byId('aName').textContent = a.name;
+  byId('bName').textContent = b.name;
+  byId('aRule').textContent = a.desc;
+  byId('bRule').textContent = b.desc;
+  matchPresets.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.match === a.short + ',' + b.short));
+  });
+  renderReplay();
+}
+
+function advanceRound() {
+  if (shown < replay.turns.length) shown++;
+  renderReplay();
+}
+
+function chooseMatch(button) {
+  [aSelect.value, bSelect.value] = button.dataset.match.split(',');
+  matchW.value = '.995';
+  prepareReplay();
+}
+
+function drawCurve() {
+  const canvas = byId('curve');
+  const ctx = canvas.getContext('2d');
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = 620 * ratio;
+  canvas.height = 335 * ratio;
+  ctx.scale(ratio, ratio);
+  const left = 57, right = 593, top = 39, bottom = 278;
+  const x = w => left + (w - 0.5) * 2 * (right - left);
+  const y = gap => bottom - (gap + 0.5) * (bottom - top);
+
+  function line(x1, y1, x2, y2, color, width = 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  function dot(w, gap, radius, color) {
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.arc(x(w), y(gap), radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const muted = '#485d54';
+  const green = '#116347';
+  ctx.font = '17px Arial, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (const tick of [-0.5, -0.25, 0, 0.25, 0.5]) {
+    const baseline = tick === 0;
+    line(left, y(tick), right, y(tick), baseline ? '#8ba097' : '#d6e0db', baseline ? 1.5 : 1);
+    ctx.fillStyle = muted;
+    ctx.fillText(String(tick).replace('-', '−'), left - 11, y(tick));
+  }
+  ctx.textAlign = 'center';
+  for (const tick of [0.5, 0.6, 0.7, 0.8, 0.9, 1]) {
+    line(x(tick), bottom, x(tick), bottom + 5, '#8ba097');
+    ctx.fillStyle = muted;
+    ctx.fillText(tick.toFixed(1), x(tick), bottom + 18);
+  }
+  ctx.fillText('Continuation probability (w)', (left + right) / 2, 322);
+
+  const upper = saved.findIndex(point => point.vot > 0);
+  const below = saved[upper - 1];
+  const above = saved[upper];
+  const crossing = below.w - below.vot * (above.w - below.w) / (above.vot - below.vot);
+  ctx.setLineDash([4, 5]);
+  line(x(crossing), top + 7, x(crossing), bottom, '#6c8378');
+  ctx.setLineDash([]);
+  ctx.fillStyle = muted;
+  ctx.fillText('Crosses zero near ' + crossing.toFixed(2), x(crossing), 23);
+
+  ctx.beginPath();
+  ctx.strokeStyle = green;
+  ctx.lineWidth = 2.5;
+  saved.forEach(({w, vot}, i) => {
+    if (i === 0) ctx.moveTo(x(w), y(vot));
+    else ctx.lineTo(x(w), y(vot));
+  });
+  ctx.stroke();
+  saved.forEach(({w, vot}) => dot(w, vot, 3.5, green));
+  if (live) {
+    dot(live.w, live.gap, 11, '#dbece2');
+    dot(live.w, live.gap, 7, '#a14730');
+  }
+  const summary = 'The saved payoff gap increases with continuation probability and crosses zero near ' + crossing.toFixed(2) + '.';
+  canvas.setAttribute('aria-label', summary + (live ? ' Latest live result at w = ' + formatW(live.w) + ': ' + formatGap(live.gap) + ' points per round.' : ''));
+}
+
+function addRankRow(table, score) {
+  const row = table.insertRow();
+  cell(row, strategies[score.idx].name, true, 'row');
+  cell(row, String(score.rank)).className = 'numeric';
+  cell(row, score.mean.toFixed(3)).className = 'numeric';
+}
+
+function renderTournament() {
+  const w = Number(tourW.value);
+  horizonPresets.forEach(button => {
+    button.setAttribute('aria-pressed', String(Number(button.dataset.w) === w));
+  });
+  byId('expected').textContent = (1 / (1 - w)).toLocaleString('en', {maximumFractionDigits: 1});
+  byId('gap').textContent = live ? formatGap(live.gap) : '—';
+  byId('runInfo').textContent = live ? 'Completed 2,530 matches at w = ' + formatW(live.w) + '.' : 'Choose a horizon and run the tournament.';
+  const ranks = byId('ranks');
+  const allRanks = byId('allRanks');
+  ranks.replaceChildren();
+  allRanks.replaceChildren();
+  byId('winner').textContent = '';
+  if (live) {
+    byId('winner').textContent = '1st · ' + strategies[live.scores[0].idx].name;
+    const scoreMap = new Map(live.scores.map(score => [strategies[score.idx].short, score]));
+    for (const short of ['AllD', 'AllC', 'FORG1']) addRankRow(ranks, scoreMap.get(short));
+    live.scores.forEach(score => addRankRow(allRanks, score));
+  }
+  drawCurve();
+}
+
+async function simulate() {
+  if (running) return;
+  running = true;
+  runButton.disabled = true;
+  tourW.disabled = true;
+  horizonPresets.forEach(button => { button.disabled = true; });
+  byId('runInfo').textContent = 'Running 2,530 matches…';
+  // Let the browser paint the status before running the bundled engine.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  try {
+    state.w = Number(tourW.value);
+    runTournament();
+    const scores = state.result.scores.map((score, i) => ({...score, rank: i + 1}));
+    const firstGroup = scores.filter(score => nice.has(strategies[score.idx].short));
+    const secondGroup = scores.filter(score => !nice.has(strategies[score.idx].short));
+    const mean = group => group.reduce((sum, score) => sum + score.mean, 0) / group.length;
+    live = {w: state.w, scores, gap: mean(firstGroup) - mean(secondGroup)};
+    renderTournament();
+  } catch (error) {
+    byId('runInfo').textContent = 'The tournament could not finish. Please try again.';
+    console.error(error);
+  } finally {
+    running = false;
+    runButton.disabled = false;
+    tourW.disabled = false;
+    horizonPresets.forEach(button => { button.disabled = false; });
+  }
+}
+
+function chooseHorizon() {
+  live = null;
+  renderTournament();
+}
+
+function showView(view) {
+  const isReplay = view === 'match';
+  byId('match').hidden = !isReplay;
+  byId('tournament').hidden = isReplay;
+  byId('matchTab').setAttribute('aria-current', String(isReplay));
+  byId('tournamentTab').setAttribute('aria-current', String(!isReplay));
+  if (!isReplay) stopReplay();
+}
+
+strategies.forEach(strategy => {
+  const label = strategy.name + ' (' + strategy.short + ')';
+  appendOption(aSelect, strategy.short, label);
+  appendOption(bSelect, strategy.short, label);
+});
+saved.forEach(({w}) => appendOption(tourW, String(w), formatW(w)));
+matchPresets.forEach(button => button.addEventListener('click', () => chooseMatch(button)));
+horizonPresets.forEach(button => {
+  button.addEventListener('click', () => {
+    tourW.value = button.dataset.w;
+    chooseHorizon();
+  });
+});
+
+[aSelect, bSelect, matchW].forEach(select => select.addEventListener('change', prepareReplay));
+nextButton.addEventListener('click', () => {
+  stopReplay();
+  advanceRound();
+});
+playButton.addEventListener('click', () => {
+  if (timer !== null) {
+    stopReplay();
+    return;
+  }
+  advanceRound();
+  if (shown < replay.turns.length) {
+    playButton.textContent = 'Ⅱ Pause';
+    timer = setInterval(advanceRound, 650);
+  }
+});
+byId('reset').addEventListener('click', prepareReplay);
+byId('matchTab').addEventListener('click', () => showView('match'));
+byId('tournamentTab').addEventListener('click', () => showView('tournament'));
+tourW.addEventListener('change', chooseHorizon);
+runButton.addEventListener('click', simulate);
+
+const fullButton = byId('full');
+fullButton.hidden = !document.fullscreenEnabled;
+fullButton.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    fullButton.textContent = 'Use browser full screen';
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  fullButton.textContent = document.fullscreenElement ? 'Exit full screen' : '⛶ Full screen';
+});
+
+chooseMatch(matchPresets[0]);
+renderTournament();
+
+</script>
+</body>
+</html>
